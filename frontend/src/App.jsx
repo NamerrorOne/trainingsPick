@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import styles from "./App.module.css";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "trainingspick-production.up.railway.app/api";
 const ADMIN_ID = 12345678; // Сюда свой ID
 
 function App() {
