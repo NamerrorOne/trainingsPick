@@ -154,7 +154,7 @@ function App() {
                         className={`${styles.occupied} ${isMyBooking ? styles.mySlot : ""}`}
                         onClick={() => isMyBooking && handleCancel(event.id, i)}
                       >
-                        {/* ВОТ ЭТОТ ОТРЫВОК ВСТАВЛЯЕМ СЮДА */}
+                        {/* 1. Сценарий: ЭТО МОЙ СЛОТ */}
                         {isMyBooking ? (
                           <div className={styles.mySlotControls}>
                             <div className={styles.userInfo}>
@@ -167,7 +167,7 @@ function App() {
                               <button
                                 className={styles.confirmBtn}
                                 onClick={(e) => {
-                                  e.stopPropagation(); // Чтобы не сработала отмена записи при клике на кнопку
+                                  e.stopPropagation();
                                   handleStatus(event.id, "confirmed");
                                 }}
                               >
@@ -175,7 +175,8 @@ function App() {
                               </button>
                             )}
                           </div>
-                        ) : (
+                        ) : isAdmin ? (
+                          /* 2. Сценарий: Я АДМИН (вижу всех участников) */
                           <div className={styles.userInfo}>
                             {booking.user_photo && (
                               <img
@@ -185,15 +186,17 @@ function App() {
                               />
                             )}
                             <span className={styles.userName}>
-                              {isAdmin
-                                ? `${booking.user_name} ${booking.status === "confirmed" ? "✅" : ""}`
-                                : "Занято"}
+                              {booking.user_name}{" "}
+                              {booking.status === "confirmed" ? "✅" : ""}
                             </span>
                           </div>
+                        ) : (
+                          /* 3. Сценарий: Я ОБЫЧНЫЙ ЮЗЕР (вижу просто "Занято") */
+                          <span className={styles.lockedText}>Занято</span>
                         )}
-                        {/* КОНЕЦ ОТРЫВКА */}
                       </div>
                     ) : (
+                      /* Кнопка "Записаться", если слот пустой */
                       <button
                         className={`${styles.joinBtn} ${bookingMutation.isPending ? styles.loading : ""}`}
                         disabled={
