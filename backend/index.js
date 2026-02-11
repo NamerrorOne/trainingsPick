@@ -7,8 +7,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 
-app.use(cors());           // Чтобы фронтенд мог достучаться до бэкенда
+app.use(cors({
+  origin: "*", // Разрешить запросы ототовсюду на время тестов
+  methods: ["GET", "POST", "DELETE"],
+  allowedHeaders: ["Content-Type"]
+}));         // Чтобы фронтенд мог достучаться до бэкенда
 app.use(express.json());   // Чтобы сервер понимал формат JSON в запросах
+
+
+
 
 
 const pool = new Pool({
