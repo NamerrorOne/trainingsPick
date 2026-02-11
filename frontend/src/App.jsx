@@ -5,7 +5,7 @@ import axios from "axios";
 import styles from "./App.module.css";
 
 const API_URL = "https://trainingspick-production.up.railway.app/api";
-const ADMIN_ID = 12345678; // Сюда свой ID
+const ADMIN_ID = 1038010703; // Сюда свой ID
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,6 +69,19 @@ function App() {
       user_id: user.id,
       user_name: user.first_name,
       user_photo: user.photo_url || "",
+    });
+  };
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (data) => axios.patch(`${API_URL}/bookings/status`, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+  });
+
+  const handleStatus = (eventId, status) => {
+    updateStatusMutation.mutate({
+      event_id: eventId,
+      user_id: user.id,
+      status,
     });
   };
 
@@ -141,15 +154,44 @@ function App() {
                         className={`${styles.occupied} ${isMyBooking ? styles.mySlot : ""}`}
                         onClick={() => isMyBooking && handleCancel(event.id, i)}
                       >
+                        {/* ВОТ ЭТОТ ОТРЫВОК ВСТАВЛЯЕМ СЮДА */}
                         {isMyBooking ? (
-                          <span className={styles.myLabel}>
-                            Это вы (отменить?)
-                          </span>
+                          <div className={styles.mySlotControls}>
+                            <div className={styles.userInfo}>
+                              <span className={styles.userName}>
+                                Вы{" "}
+                                {booking.status === "confirmed" ? "✅" : "⏳"}
+                              </span>
+                            </div>
+                            {booking.status !== "confirmed" && (
+                              <button
+                                className={styles.confirmBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Чтобы не сработала отмена записи при клике на кнопку
+                                  handleStatus(event.id, "confirmed");
+                                }}
+                              >
+                                Буду
+                              </button>
+                            )}
+                          </div>
                         ) : (
-                          <span className={styles.userName}>
-                            {isAdmin ? booking.user_name : "Занято"}
-                          </span>
+                          <div className={styles.userInfo}>
+                            {booking.user_photo && (
+                              <img
+                                src={booking.user_photo}
+                                className={styles.miniAvatar}
+                                alt="ava"
+                              />
+                            )}
+                            <span className={styles.userName}>
+                              {isAdmin
+                                ? `${booking.user_name} ${booking.status === "confirmed" ? "✅" : ""}`
+                                : "Занято"}
+                            </span>
+                          </div>
                         )}
+                        {/* КОНЕЦ ОТРЫВКА */}
                       </div>
                     ) : (
                       <button

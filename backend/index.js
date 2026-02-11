@@ -31,6 +31,49 @@ pool.on('error', (err) => {
 });
 
 
+const axios = require('axios');
+
+async function checkNotifications() {
+  const now = new Date();
+  const fifteenMinsLater = new Date(now.getTime() + 15 * 60000);
+
+  try {
+    const res = await pool.query(
+      `SELECT b.user_id, e.start_time, b.event_id 
+       FROM bookings b 
+       JOIN events e ON b.event_id = e.id 
+       WHERE e.start_time BETWEEN $1 AND $2 
+       AND b.notification_sent = false`, // Добавляем флаг
+      [now.toISOString(), fifteenMinsLater.toISOString()]
+    );
+
+    for (let row of res.rows) {
+      const text = `🔔 Напоминание! Тренировка начнется через 15 минут. Подтвердите участие в приложении!`;
+      const url = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`;
+      
+      try {
+        await axios.post(url, { chat_id: row.user_id, text });
+        // Помечаем, что уведомили
+        await pool.query(
+          'UPDATE bookings SET notification_sent = true WHERE event_id = $1 AND user_id = $2',
+          [row.event_id, row.user_id]
+        );
+      } catch (e) { console.error("Ошибка отправки в ТГ", e.message); }
+    }
+  } catch (err) { console.error("Ошибка уведомлений", err); }
+}
+// Запускать проверку каждую минуту
+setInterval(checkNotifications, 60000);
+
+app.patch('/api/bookings/status', async (req, res) => {
+  const { event_id, user_id, status } = req.body;
+  await pool.query(
+    'UPDATE bookings SET status = $1 WHERE event_id = $2 AND user_id = $3',
+    [status, event_id, user_id]
+  );
+  res.json({ message: "Статус обновлен" });
+});
+
 // Проверка связи
 app.get('/api/test', async (req, res) => {
   try {
