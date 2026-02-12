@@ -6,6 +6,8 @@ require('dotenv').config();         // Читалка файла .env
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(helmet());
+
 
 app.use(cors({
   origin: "*", // Разрешить запросы ототовсюду на время тестов
